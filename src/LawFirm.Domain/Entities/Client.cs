@@ -4,6 +4,11 @@ namespace LawFirm.Domain.Entities;
 
 public class Client
 {
+    // Private constructor forces every Client to be built through CreateIndividual/CreateOrganization below.
+    // This protects STRUCTURE only (ClientType always matches which name fields got set, can't be reassigned
+    // later since ClientType has a private setter) - it does NOT validate values. A caller passing an
+    // out-of-range enum (e.g. (ClientStatus)99) still gets happily accepted here; that check is a separate
+    // job done by ClientService.ValidateCreate before this factory method is ever called.
     private Client() { }
 
     public int Id { get; private set; }

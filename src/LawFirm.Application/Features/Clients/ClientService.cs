@@ -62,6 +62,13 @@ public class ClientService : IClientService
 
     public async Task<Result<ClientDetailDto>> CreateAsync(CreateClientRequest request)
     {
+        // This is the ONLY place request values get checked (required fields, enum validity, email format).
+        // Client.cs's private constructor doesn't do this - it only guards structure, not values - so if
+        // this check is skipped, an invalid ClientStatus like 99 would sail straight into Client.CreateIndividual
+        // with no complaint, since casting an out-of-range int to a C# enum doesn't throw.
+        //
+        // `error` here is a plain Error, not a Result<ClientDetailDto> - this compiles
+        // via Result<T>'s implicit operator(Error), which auto-wraps it into a failed Result.
         if (ValidateCreate(request) is { } error)
             return error;
 
@@ -80,6 +87,8 @@ public class ClientService : IClientService
         _db.Clients.Add(client);
         await _db.SaveChangesAsync();
 
+        // `client.ToDetail()` returns a plain ClientDetailDto, not a Result<ClientDetailDto> -
+        // implicit operator(T) auto-wraps it: new Result<ClientDetailDto>(dto, true, null).
         return client.ToDetail();
     }
 
