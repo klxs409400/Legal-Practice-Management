@@ -59,6 +59,16 @@ public sealed class LawFirmDbContext : DbContext
             entity.HasIndex(c => c.Status);
             entity.HasIndex(c => c.IsArchived);
 
+            // HasMany(c => c.Contacts): one Client has many Contacts - the "one" side of the
+            // relationship. Only possible because Client.cs actually has a Contacts navigation
+            // property to point at.
+            // WithOne(): each Contact belongs to exactly one Client - the "many" side. Empty
+            // parens = ClientContact has NO navigation property pointing back to Client (no
+            // `public Client Client {...}` on ClientContact.cs), so navigation only works
+            // Client -> Contacts, never Contact -> Client.
+            // HasForeignKey(x => x.ClientId): the actual FK column linking them is ClientContact.ClientId.
+            // OnDelete(Cascade): deleting a Client automatically deletes all its ClientContacts too,
+            // instead of leaving orphaned rows pointing at a Client that no longer exists.
             entity.HasMany(c => c.Contacts)
                 .WithOne()
                 .HasForeignKey(x => x.ClientId)
@@ -71,27 +81,51 @@ public sealed class LawFirmDbContext : DbContext
             entity.HasData(
                 new
                 {
-                    Id = 1, ClientCode = "CLI-2026-000001",
-                    ClientType = ClientType.Organization, Status = ClientStatus.ActiveClient,
-                    OrganizationName = "Acme Holdings Pty Ltd", TradingName = "Acme",
-                    CompanyNumber = "12 345 678 901", Email = "legal@acme.example",
-                    Phone = "+61 2 5550 1000", City = "Sydney", State = "NSW", Country = "Australia",
-                    IsArchived = false, CreatedAt = SeedDate, CreatedBy = "system"
+                    Id = 1,
+                    ClientCode = "CLI-2026-000001",
+                    ClientType = ClientType.Organization,
+                    Status = ClientStatus.ActiveClient,
+                    OrganizationName = "Acme Holdings Pty Ltd",
+                    TradingName = "Acme",
+                    CompanyNumber = "12 345 678 901",
+                    Email = "legal@acme.example",
+                    Phone = "+61 2 5550 1000",
+                    City = "Sydney",
+                    State = "NSW",
+                    Country = "Australia",
+                    IsArchived = false,
+                    CreatedAt = SeedDate,
+                    CreatedBy = "system"
                 },
                 new
                 {
-                    Id = 2, ClientCode = "CLI-2026-000002",
-                    ClientType = ClientType.Individual, Status = ClientStatus.ActiveClient,
-                    FirstName = "John", LastName = "Smith", Email = "john.smith@example.com",
-                    Phone = "+61 400 111 222", City = "Melbourne", State = "VIC", Country = "Australia",
-                    IsArchived = false, CreatedAt = SeedDate, CreatedBy = "system"
+                    Id = 2,
+                    ClientCode = "CLI-2026-000002",
+                    ClientType = ClientType.Individual,
+                    Status = ClientStatus.ActiveClient,
+                    FirstName = "John",
+                    LastName = "Smith",
+                    Email = "john.smith@example.com",
+                    Phone = "+61 400 111 222",
+                    City = "Melbourne",
+                    State = "VIC",
+                    Country = "Australia",
+                    IsArchived = false,
+                    CreatedAt = SeedDate,
+                    CreatedBy = "system"
                 },
                 new
                 {
-                    Id = 3, ClientCode = "CLI-2026-000003",
-                    ClientType = ClientType.Individual, Status = ClientStatus.NewIntake,
-                    FirstName = "Maria", LastName = "Nguyen", Email = "maria.nguyen@example.com",
-                    IsArchived = false, CreatedAt = SeedDate, CreatedBy = "system"
+                    Id = 3,
+                    ClientCode = "CLI-2026-000003",
+                    ClientType = ClientType.Individual,
+                    Status = ClientStatus.NewIntake,
+                    FirstName = "Maria",
+                    LastName = "Nguyen",
+                    Email = "maria.nguyen@example.com",
+                    IsArchived = false,
+                    CreatedAt = SeedDate,
+                    CreatedBy = "system"
                 });
         });
 
@@ -115,11 +149,34 @@ public sealed class LawFirmDbContext : DbContext
 
             entity.HasData(new
             {
-                Id = 1, ClientId = 2,
-                Name = "Jane Director", RelationshipType = "Director",
-                Email = "jane@acme.example", Phone = "+61 400 000 001", Company = "Acme Holdings",
-                IsActive = true, CreatedAt = SeedDate, CreatedBy = "system"
+                Id = 1,
+                ClientId = 2,
+                Name = "Jane Director",
+                RelationshipType = "Director",
+                Email = "jane@acme.example",
+                Phone = "+61 400 000 001",
+                Company = "Acme Holdings",
+                IsActive = true,
+                CreatedAt = SeedDate,
+                CreatedBy = "system"
             });
+        });
+
+        modelBuilder.Entity<Reference>(entity =>
+        {
+            entity.ToTable("Reference");
+            entity.HasKey(r => r.Id);
+            entity.Property(r => r.Id).ValueGeneratedOnAdd();
+            entity.Property(r => r.Name).HasMaxLength(30).IsRequired();
+            entity.HasIndex(r => new { r.ReferenceDataType, r.Name }).IsUnique();
+            entity.Property(r => r.ReferenceCode).HasMaxLength(30);
+            entity.Property(r => r.ReferenceDataType).HasConversion<string>().HasMaxLength(30).IsRequired();
+            entity.Property(r => r.CreatedBy).HasMaxLength(100).IsRequired();
+            entity.Property(r => r.UpdatedBy).HasMaxLength(100);
+
+            entity.HasIndex(r => r.ReferenceDataType);
+            entity.HasIndex(r => r.IsActive);
+
         });
 
         base.OnModelCreating(modelBuilder);
