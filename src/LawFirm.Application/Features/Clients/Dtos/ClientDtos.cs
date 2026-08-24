@@ -2,6 +2,12 @@ using LawFirm.Domain.Enums;
 
 namespace LawFirm.Application.Features.Clients.Dtos;
 
+// A plain class (not a positional record like CreateClientRequest below) because this is
+// bound via [FromQuery] on ClientsController.List, not [FromBody]. Query-string binding
+// builds a parameterless instance first, then sets only the properties that showed up in
+// the URL one at a time - that needs a real parameterless constructor + settable props,
+// which a positional record's "all args at once" constructor can't provide. [FromBody]
+// JSON, by contrast, arrives as one complete object, so a positional record works fine there.
 public class ClientListRequest
 {
     public string? Keyword { get; set; }
