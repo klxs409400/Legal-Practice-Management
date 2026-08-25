@@ -5,7 +5,6 @@ using LawFirm.Domain.Entities;
 using LawFirm.Domain.Enums;
 using LawFirm.Infrastructure.Persistence;
 using LawFirm.Shared.Results;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 namespace LawFirm.Application.Features.References;
@@ -62,12 +61,64 @@ public class ReferenceService : IReferenceService
             return error;
         }
 
-        var reference = Reference.CreateSpecificCategoryName(request.Name, request.DisplayOrder,)
+        var reference = Reference.CreateSpecificCategoryName(request.Name, "System", request.ReferenceDataType, request.DisplayOrder);
+
+        reference.ApplyCommonFields(request.ReferenceCode, request.Name, request.DisplayOrder);
+
+        _db.References.Add(reference);
+        await _db.SaveChangesAsync();
+
+        return reference.ToDetail();
     }
 
+    public async Task<Result<ReferenceDetailDto>> UpdateAsync(int id, UpdateReferenceRequest request)
+    {
+        var reference = await _db.References
+        .FirstOrDefaultAsync(r => r.Id == id);
+
+        if (reference is null)
+            return Error.NotFound("Reference", id);
+
+        if (string.IsNullOrWhiteSpace(request.Name))
+        {
+            return Error.Validation("Name is required for a Reference.");
+        }
+
+        reference.ApplyCommonFields(request.ReferenceCode, request.Name, request.DisplayOrder);
+        reference.UpdatedAt = DateTimeOffset.UtcNow;
+        reference.UpdatedBy = "System";
+
+        await _db.SaveChangesAsync();
+        return reference.ToDetail();
+
+    }
+
+    public async Task<Result> ShowAsync(int id)
+    {
+        var reference = await _db.References
+        .FirstOrDefaultAsync(r => r.Id == id);
+
+        if (reference is null)
+            return Result.Failure(Error.NotFound("Reference", id));
 
 
+        reference.ShowReference();
+        await _db.SaveChangesAsync();
+        return Result.Success();
+    }
 
+    public async Task<Result> HideAsync(int id)
+    {
+        var reference = await _db.References
+       .FirstOrDefaultAsync(r => r.Id == id);
+
+        if (reference is null)
+            return Result.Failure(Error.NotFound("Reference", id));
+
+        reference.HideReference();
+        await _db.SaveChangesAsync();
+        return Result.Success();
+    }
 
     private static Error? ValidateCreate(CreateReferenceRequest request)
     {

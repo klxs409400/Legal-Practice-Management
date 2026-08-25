@@ -25,10 +25,7 @@ namespace LawFirm.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("LawFirm.Domain.Entities.Client", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AddressLine1")
                         .HasMaxLength(200)
@@ -191,10 +188,7 @@ namespace LawFirm.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("LawFirm.Domain.Entities.ClientContact", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ClientId")
                         .HasColumnType("int");
@@ -253,7 +247,7 @@ namespace LawFirm.Infrastructure.Persistence.Migrations
                         new
                         {
                             Id = 1,
-                            ClientId = 1,
+                            ClientId = 2,
                             Company = "Acme Holdings",
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "system",
@@ -263,6 +257,61 @@ namespace LawFirm.Infrastructure.Persistence.Migrations
                             Phone = "+61 400 000 001",
                             RelationshipType = "Director"
                         });
+                });
+
+            modelBuilder.Entity("LawFirm.Domain.Entities.Reference", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("ReferenceCode")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("ReferenceDataType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("ReferenceDataType");
+
+                    b.HasIndex("ReferenceDataType", "Name")
+                        .IsUnique();
+
+                    b.ToTable("Reference", (string)null);
                 });
 
             modelBuilder.Entity("LawFirm.Domain.Entities.ClientContact", b =>
