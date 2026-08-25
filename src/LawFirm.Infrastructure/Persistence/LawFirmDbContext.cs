@@ -17,6 +17,8 @@ public sealed class LawFirmDbContext : DbContext
     public DbSet<Client> Clients => Set<Client>();
     public DbSet<ClientContact> ClientContacts => Set<ClientContact>();
 
+    public DbSet<Reference> References => Set<Reference>();
+
     private static readonly DateTimeOffset SeedDate = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
